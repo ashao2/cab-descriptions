@@ -1,0 +1,474 @@
+---
+title: "Final Project"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+options(stringsAsFactors = FALSE)
+library(plyr)
+library(tidyverse)
+library(lme4)
+```
+
+### Abstract
+
+Studies have suggested that meaningful differences exist between the writing styles of different academic disciplines. We are interested in investigating whether such differences not only exist in these disciplines’ research, but also in the writing that presents such disciplines. We will use Brown University course descriptions from Fall 2019 to look at the way that college professors describe the classes they teach. We will investigate whether course descriptions differ significantly across disciplines by metrics of linguistic complexity and formality, and if so, whether such differences mirror those found in research literature. Results corroborating this pattern would suggest that academics tend to describe their courses in a way that reflects the typical writing of their discipline, tacitly indexing such features to students as they enter into the discipline.
+
+### Introduction & Background
+Studies such as Durrant (2015) have suggested that meaningful differences exist between the writing styles of different academic disciplines (e.g., science & technology vs humanities & social sciences). The two main dimensions of difference we will be looking at in this project are informality and language complexity in the form readability. These were chosen as we believe that there are meaningful differences between the writing styles of various departments along these dimensions. Some background on these dimensions has been included below. 
+	
+Hyland and Jiang (2016) adopt ten linguistic markers of informality from Chang and Swales (1999). These markers were drawn from advice given in style guides and aim to represent underlying grammatical patterns rather than lexical formality. They are: first person pronouns, unattended anaphoric pronouns, split infinitives, sentence-initial conjunctions, sentence-final prepositions, listing expressions, second person pronouns, contractions, direct questions, and exclamations. Hyland and Jiang argue that a lack of these features indexes objectivity and formality because the voices of individual authors are obscured. In contrast, the ten markers of informality allow authors to interact with and engage their readers more directly and intimately. In their investigation of a corpus of journal articles from 1965, 1985, and 2015, they found that social science articles had more informal markers per 10,000 words compared to STEM articles. 
+
+Following Freedman and Jurafsky (2011) and Hartley, Sotto, and Fox (2004), we measure readability using the Flesch reading ease score, which takes into account the number of syllables, words, and sentences in a text. A higher score indicates greater readability. Hartley, Sotto, and Fox (2004) hypothesized that the reading ease score would increase from the sciences to the arts and humanities, with the social sciences falling in between. They found that scientific scholarly journal articles were harder to read than arts and humanities journal articles. Social sciences journal articles had a readability score that was very close to that of the sciences. Other forms of writing (texts for colleagues, non-academic magazines) displayed different patterns, but we believe these to be less relevant to the study at hand.
+
+Of course, we do not expect course descriptions to be written exactly like academic journal articles. However, the professors who author course descriptions are likely influenced by the writing norms of their respective disciplines. For markers of informality, we expect to find that social sciences descriptions are more informal than STEM descriptions, as Hyland and Jiang (2016) found for journal articles. Though they did not consider humanities journal articles, we are predicting that humanities course descriptions will be less formal than the social sciences. Because the humanities includes diverse and often informal writing styles like poetry, plays, and novels, perhaps a tradition of formal writing is not as entrenched in humanities writing. Additionally, in accordance with the readability scores for academic journal writing in Hartley, Sotto, and Fox (2004), we hypothesize that the social sciences will be more readable than STEM, and the humanities will be more readable than the social sciences.
+
+To analyse informality and readability, we calculate an informality and reading ease score for each of the course descriptions, as outlined below. 
+
+##### Informality 
+To compare the level of informality between the course descriptions between classes, we used three of the markers of informality mentioned in Hyland and Jiang (2016). We looked at first person pronouns, second person pronouns and direct questions. We chose these markers as they were the easiest to identify and measure from the course descriptions, and because they were the most numerous. Because course descriptions are written with the audience of students in mind, we suspect there may not be many uses of the second-person pronoun. Thus, we also consider references to students.
+
+For each of the course descriptions, we included a count of the number of first and second person pronouns that were used, along with the number of questions, measured by the number of question marks in the text, and number of uses of 'student(s)'. We then calculated an informality score for each course description. This is the sum of the number of first-person and second person pronouns used, the number of references to students, and the number of questions. This addition of the various informality markers is similar to as in Hyland and Jiang (2016). We then divided this sum by the number of words in the course description to get the informality score. 
+Two other features we considered using but did not include due to overall scarcity are exclamations and contractions. Though Hyland and Jiang did not investigate the humanities, we predict that the humanities will have a higher informality score than the social sciences, with STEM having the lowest informality score.
+
+
+##### Reading ease 
+Language complexity is a difficult concept to quantify. As Freedman and Jurasky (2011) states, in general, texts with higher complexity are longer, have more complex syntactic structures (e.g., coordinating or subordinating structures), and use less frequent words. Because overall language complexity encapsulates complexities at all levels of linguistics (phonology, morphology, syntax, and semantics), different metrics focus on different observables and thus produce different results. Thus, the choice of a single metric is important and must be carefully made. We have decided to use the Flesch readability ease metric for two reasons. One, as mentioned above, the metric is attested in the relevant literature, and successful results in studies like Freedman and Jurafsky (2011) and Hartley, Sotto, and Fox (2004) suggest that the score works well for these research contexts. Two, compared to other metrics, the readability score works well for the texts that we have chosen. One obvious feature of course descriptions is their reference to academic topics which are often not discussed in non-academic settings. Because of this, metrics of complexity that are based on the rarity of a text’s lexemes as defined by a standard corpus (e.g., surprisal) would be less fit for our methodology; course descriptions across all disciplines likely contain relatively uncommon words, and potential differences (like if math concepts are spoken particularly infrequently) are likely not indicative of the actual complexity of the descriptions. Even if we find a corpus that is based off of academic writing, the likelihood that that corpus would evenly account for the variety of disciplines we’re using is low. As such, the Flesch readability ease metric is the right choice for this study.
+We used the textstat Python package to compute the scores via its built-in function.
+
+### Hypothesis 
+
+Based on this previous literature, we have the following hypotheses: 
+
+1. We expect that humanities course descriptions will have the highest informality scores, followed by social science course descriptions, followed by STEM descriptions having the lowest informality scores.
+
+2. We expect that humanities course descriptions will have the highest readability scores, followed by social science course descriptions, followed by STEM descriptions having the lowest readability scores.
+
+### Methodology
+As highlighted in Durrant (2015), corpus studies exploring differences in academic writing between the disciplines vary drastically in how they group subjects into larger disciplines. Often, little reasoning is given as to how groupings were determined. We created the groups of STEM, social science, and humanities based on information presented in the Brown University Factbook, which sorts concentrations into five disciplines: humanities, interdisciplinary, life & medical sciences, physical sciences, and social sciences. Because we chose to look at courses by department, we eliminated the category of interdisciplinary. We also combined the physical and life & medical sciences to create the STEM category. 
+
+Next, we randomly selected five departments per discipline to use for our sample dataset. Departments with five or fewer course offerings were excluded prior to selection.
+The departments we chose for each discipline are: 
+* STEM: Applied-Mathematics, Chemistry, Computer Science, Geological Sciences, Mathematics
+* Social sciences: Anthropology, History, Education, International Relations, Public Health 
+* Humanities: Archaeology, Comparative Literature, Theatre Arts and Performance Studies, Judaic Studies, Literary Arts
+
+There were 132 STEM courses, 160 social sciences courses, and 146 humanities courses.
+
+##### Preprocessing
+We collected the course descriptions for all of the Fall 2019 courses offered by each of the departments selected. We chose to use the Fall 2019 semester as it was the most recent semester that was not affected by irregularities caused by the COVID-19 pandemic. 
+
+Part of our preprocessing was done in Google Sheets and Pandas. This included cleaning up the course descriptions by removing text that had to do with the logistics of the course (such as information about prerequisites or maximum enrollment numbers), as these don't describe the course itself. This was also where we calculated each desciription's reading ease and informality scores, as described in the previous section. 
+
+In R, we removed any courses that did not have a course description or an enrollment number. We also created boolean variables representing upper level and grad level courses from the numeric class level variable. 
+
+```{r preprocessing}
+course_data <- read_csv("preprocessed_CAB.csv")
+
+# Remove classes with NA enrollment
+course_data$enrollment <- as.numeric(course_data$enrollment)
+course_data <- course_data[!is.na(course_data$enrollment),]
+
+# Remove courses w/ empty descriptions
+course_data <- course_data[!is.na(course_data$description),]
+
+# Fill in WRIT NAs to FALSE
+course_data$WRIT[is.na(course_data$WRIT)] <- FALSE
+course_data$WRIT <- as.logical(course_data$WRIT)
+
+# Make discipline a factor
+course_data$discipline <- factor(course_data$discipline)
+
+# Create new boolean variables for upper level and grad classes
+course_data$upper_level_class <- course_data$level > 0
+course_data$grad_class <- course_data$level > 1
+
+mean(course_data$upper_level_class) * 421
+```
+
+### Analysis
+We then used mixed effects models to predict informality and reading ease scores.
+
+```{r informality models}
+# Informality models
+# Humanities as reference level
+course_data$discipline <- relevel(course_data$discipline,"humanities")
+informality_mdl_hum <- lmer(scale(informality) ~ discipline + scale(log(enrollment)) + WRIT + upper_level_class + grad_class + (1|department),
+                        data = course_data)
+
+# Social Sciences as reference level
+course_data$discipline <- relevel(course_data$discipline,"social_science")
+informality_mdl_ss <- lmer(scale(informality) ~ discipline + scale(log(enrollment)) + WRIT + upper_level_class + grad_class + (1|department),
+                        data = course_data)
+```
+
+```{r reading ease models}
+# Reading ease models
+# Humanities as reference level
+course_data$discipline <- relevel(course_data$discipline,"humanities")
+reading_ease_mdl_hum <- lmer(scale(reading_ease) ~ discipline + scale(log(enrollment)) + WRIT + upper_level_class + grad_class + (1|department),
+                        data = course_data)
+
+# Social Sciences as reference level
+course_data$discipline <- relevel(course_data$discipline,"social_science")
+reading_ease_mdl_ss <- lmer(scale(reading_ease) ~ discipline + scale(log(enrollment)) + WRIT + upper_level_class + grad_class + (1|department),
+                        data = course_data)
+```
+
+Discipline was one of our fixed effects, as we wanted to investigate how discipline affects informality and reading ease scores. We ran separate models with humanities and social sciences as the reference level, to get a complete understanding of the relationship between the three disciplines. We also included enrollment number, WRIT-designation, upper level class status, and grad class status as fixed effects in our model. Though we wee not actively looking to investigate these factors, we suspected that they could explain variance in the data.
+
+WRIT courses include all English, Literary Arts, and Comparative Literature courses, as well as courses in other departments that are specially designated as WRIT courses. According to The Brown Degree, WRIT courses are intended to teach students “how to think and communicate in writing either by learning the conventions of academic writing at the college level or by learning the conventions and expectations for writing in a particular discipline.” This goal directly relates to our research question. Since WRIT courses have an especially strong emphasis on discipline writing, perhaps their courses descriptions will reflect this. 
+
+Class level is one of our fixed effects as we suspect that professors may write course descriptions for introductory courses, advanced undergraduate courses, and graduate courses differently. We have two binary variables for class level - (1) upper_level_class - which is whether the course is a 1000/2000 level class or not, and (2) grad_class - which is whether the course is a graduate level (2000 level) class or not. We suspect that there may be differences based on these distinctions in class level.
+
+We also include enrollment numbers as a fixed effect as these could also have an impact on how course descriptions are written, as small seminar courses are taught very differently than large lectures. We used the log of enrollment as that appeared to be the best way to transform the data, based on the distribution of enrollment numbers in the graph below.
+
+```{r distribution of enrollment}
+# Distribution of enrollment
+course_data %>% ggplot(aes(x = enrollment)) +
+  geom_density(alpha = 0.5) +
+  theme_minimal() + 
+  ggtitle("Distribution of enrollment")
+```
+
+We included department as a random effect, as we wanted to account for any effect that the department of the class could have on informality and reading ease scores. 
+
+
+### Results 
+
+##### Informality 
+
+```{r informality results}
+# Humanities as reference level
+course_data$discipline <- relevel(course_data$discipline,"humanities")
+summary(lmerTest::lmer(formula(informality_mdl_hum), data=course_data))
+
+# Social Sciences as reference level
+course_data$discipline <- relevel(course_data$discipline,"social_science")
+summary(lmerTest::lmer(formula(informality_mdl_ss), data=course_data))
+
+# Plot informality by discipline
+course_data %>% ggplot(aes(x = informality, fill = discipline)) +
+  geom_density(alpha = 0.5) +
+  geom_vline(data= ddply(course_data, "discipline", summarise, grp.mean=mean(informality)),
+             aes(xintercept=grp.mean, color=discipline),
+             linetype="dashed") +
+  theme_minimal() +
+  ggtitle("Informality by discipline")
+```
+
+From our model with humanities as the reference level, we found that descriptions for STEM classes had a significantly lower informality score than descriptions for humanities classes (estimate = -0.43884, p = 0.0277). Descriptions for social science classes did have a lower informality score than those for humanities classes (estimate = -0.16975), but this difference was not significant (p = 0.324). 
+The model with social sciences as the reference level showed that STEM class descriptions had a lower informality score than social science class descriptions (estimate = -0.26909), but this was not significant (p = 0.129). Similarly, humanities class descriptions had a higher informality score than social science class descriptions (estimate = 0.16975), but this was again not significant (p= 0.324). This makes sense, as the estimate for the social sciences was closest to the mean, with humanities descriptions having significantly higher informality, and STEM having significantly lower informality than the mean. 
+
+Log-enrollment and WRIT designations did not have any significant effect on the informality of the descriptions. Class level also had minimal effects on informality - upper level classes had lower informality scores than 0 level classes (estimate = -0.16100, p = 0.201), and grad classes had somewhat higher informality scores than 0 and 1000 level classes (estimate = 0.01033, p = 0.935), but neither of these were significant. 
+
+##### Reading ease 
+```{r reading ease results}
+# Humanities as reference level
+course_data$discipline <- relevel(course_data$discipline,"humanities")
+summary(lmerTest::lmer(formula(reading_ease_mdl_hum), data=course_data))
+
+# Social Sciences as reference level
+course_data$discipline <- relevel(course_data$discipline,"social_science")
+summary(lmerTest::lmer(formula(reading_ease_mdl_ss), data=course_data))
+
+# Plot reading ease by discipline
+course_data %>% ggplot(aes(x = reading_ease, fill = discipline)) +
+  geom_density(alpha = 0.5) +
+  geom_vline(data= ddply(course_data, "discipline", summarise, grp.mean=mean(reading_ease)),
+             aes(xintercept=grp.mean, color=discipline),
+             linetype="dashed") +
+  theme_minimal() +
+  ggtitle("Reading ease by discipline")
+```
+
+Social science descriptions were less readable than humanities (est. = -0.33128), but the difference was not significant (p = 0.1683). STEM descriptions were less readable than humanities (est. = -0.85172). This difference was found to be significant (p = 0.00233). STEM descriptions were also less readable than social science descriptions (est. = -0.52044), and this difference was significant (p = 0.0374). 
+
+Increased log-enrollment led to decreased reading ease (est. = -0.09919). This was borderline significant (p = 0.0548). WRIT course descriptions were associated with an increase in reading ease (est.= 0.24394), and this difference was borderline significant (p = 0.0610). Upper level course descriptions were found to be less readable than 0-level descriptions (est. = -0.27535). This difference was significant (p = 0.0138). Grad course descriptions were also less readable than non-grad course descriptions (est. = -0.21845), but this difference was borderline significant (p = 0.0528).
+
+The following visualizations are for the other fixed effects. More plots split additionally by discipline are included at the end.
+
+```{r visualizations}
+# By enrollment
+course_data %>% ggplot(aes(x = log(enrollment), y = informality)) +
+  geom_point() +
+  stat_smooth() + 
+  theme_bw() + 
+  ggtitle("Log of enrollment vs. informality")
+
+course_data %>% ggplot(aes(x = log(enrollment), y = reading_ease)) +
+  geom_point() +
+  stat_smooth() +
+  theme_bw() + 
+  ggtitle("Log of enrollment vs. reading ease")
+
+# By WRIT
+course_data %>% ggplot(aes(x = informality, fill = WRIT)) +
+  geom_density(alpha = 0.5) +
+  geom_vline(data= ddply(course_data, "WRIT", summarise, grp.mean=mean(informality)),
+             aes(xintercept=grp.mean, color=WRIT),
+             linetype="dashed") +
+  theme_minimal() + 
+  ggtitle("Informality by WRIT status")
+
+course_data %>% ggplot(aes(x = reading_ease, fill = WRIT)) +
+  geom_density(alpha = 0.5) +
+  geom_vline(data= ddply(course_data, "WRIT", summarise, grp.mean=mean(reading_ease)),
+             aes(xintercept=grp.mean, color=WRIT),
+             linetype="dashed") +
+  theme_minimal() + 
+  ggtitle("Reading ease by WRIT status")
+
+# By level > 0
+course_data %>% ggplot(aes(x = informality, fill = upper_level_class)) +
+  geom_density(alpha = 0.5) + 
+  geom_vline(data = ddply(course_data, .(upper_level_class), summarise, grp.mean=mean(informality)),
+             aes(xintercept=grp.mean, color=upper_level_class),
+             linetype="dashed") +
+  theme_minimal() + 
+  ggtitle("Informality by upper level class status")
+
+course_data %>% ggplot(aes(x = reading_ease, fill = upper_level_class)) +
+  geom_density(alpha = 0.5) + 
+  geom_vline(data = ddply(course_data, .(upper_level_class), summarise, grp.mean=mean(reading_ease)),
+             aes(xintercept=grp.mean, color=upper_level_class),
+             linetype="dashed") +
+  theme_minimal() + 
+  ggtitle("Reading ease by upper level class status")
+
+# By level > 1
+course_data %>% ggplot(aes(x = informality, fill = grad_class)) +
+  geom_density(alpha = 0.5) + 
+  geom_vline(data = ddply(course_data, .(grad_class), summarise, grp.mean=mean(informality)),
+             aes(xintercept=grp.mean, color=grad_class),
+             linetype="dashed") +
+  theme_minimal() + 
+  ggtitle("Informality by grad class status")
+
+course_data %>% ggplot(aes(x = reading_ease, fill = grad_class)) +
+  geom_density(alpha = 0.5) + 
+  geom_vline(data = ddply(course_data, .(grad_class), summarise, grp.mean=mean(reading_ease)),
+             aes(xintercept=grp.mean, color=grad_class),
+             linetype="dashed") +
+  theme_minimal() + 
+  ggtitle("Reading ease by grad class status")
+
+# By level
+course_data$level <- factor(course_data$level)  # Make discipline a factor
+
+course_data %>% ggplot(aes(x = informality, fill = level)) +
+  geom_density(alpha = 0.5) + 
+  geom_vline(data = ddply(course_data, .(level), summarise, grp.mean=mean(informality)),
+             aes(xintercept=grp.mean, color=level),
+             linetype="dashed") +
+  theme_minimal() + 
+  ggtitle("Informality by class level")
+
+course_data %>% ggplot(aes(x = reading_ease, fill = level)) +
+  geom_density(alpha = 0.5) + 
+  geom_vline(data = ddply(course_data, .(level), summarise, grp.mean=mean(reading_ease)),
+             aes(xintercept=grp.mean, color=level),
+             linetype="dashed") +
+  theme_minimal() + 
+  ggtitle("Reading ease by class level")
+```
+
+### Discussion
+Overall, we found that humanities course descriptions were the most informal, followed by social sciences, followed by STEM. Though these differences were not all statistically significant---the only significant observation was that STEM descriptions were less informal than humanities---the overall trend reflects our hypothesis. As stated above, we believe this effect derives from professors wanting to index their discipline’s writing style in their course descriptions. STEM writing often is more formal than social science and humanities writing, so a professor wanting to model this formality to students would likely avoid informal markers in their course descriptions. Other fixed effects did not have a significant effect on informality. 
+
+Humanities had the highest readability, followed by the social sciences, followed by STEM. This is also consistent with our hypothesis. We believe that this is because course descriptions could reflect the writing styles of their discipline, and this trend in readability across disciplines was also found in a study of scholarly writing across disciplines. Increased log-enrollment led to higher readability level with borderline significance. WRIT courses were more readable than non-WRIT courses with borderline significance. This could be because WRIT courses ask students to focus on making their writing readable and prevent unnecessary complexities. Upper level and graduate level class descriptions had significantly less readability than lower level class descriptions, but the difference between graduate-level classes and non-graduate-level classes was not significant.
+
+In general, we believe that these borderline significant effects may have been fully significant if our sample size were to increase. This is a place for further research. We hypothesized that enrollment would have an effect because large classes are often taught differently than small classes, but seeing as enrollment did not have a significant effect on informality and readability, perhaps class size does not factor into how course descriptions are written.
+
+### Conclusions
+Course descriptions are their own genre of writing: they tend to be short, information-dense, and are geared towards student audiences. Though we found some significant differences in informality and readability between course descriptions from different disciplines, perhaps the medium of course descriptions limits the extent to which discipline-specific writing styles can be expressed.
+Seeing as over 200 courses had an informality score of 0, other methods of measuring informality could better capture the underlying distribution of informality between these descriptions. Additionally, we used readability as an indirect way to investigate complexity, but there are many other possible ways to quantify complexity, such as embedded clauses and word frequencies.
+Further research could approach this problem with different informality and complexity metrics. Other potential topics for further research include how course descriptions differ between schools, how course descriptions vary over time, and how course descriptions vary for different course types (e.g., discussion seminars vs. lectures). Another study focusing more on variation between departments would also be an interesting extension of this study. 
+
+### Responses to Questions
+
+**Why would reading ease score increase in the arts and humanities?**
+
+We expect the reading ease score to increase in the arts and humanities based on the findings by Hartley, Sotto, and Fox (2004). They found that specific types of works in the arts and humanities were more readable than their counterparts in the sciences, such as scholarly journal articles. As we suspected that professors may tend to describe their courses in ways that reflect the typical writing of their discipline, we hypothesized that these differences in reading ease of scholarly writing could extend to differences in the reading ease of course descriptions as well. 
+
+**Did you transform the scores in any way?**
+
+We scaled both informality and reading ease scores in the formula, but in the plots we have raw score values for both informality and reading ease. Our informality scores had a small range close to 0, which is why they may appear transformed. 
+
+**It would be interesting to split the catapult’s [scatter] and density plots by discipline.**
+
+Here are the plots split by discipline. The mean line in each subplot represents the aggregate mean across all three disciplines, so it shows how each discipline varies. We expected the subplots to have largely the same shape across disciplines(with some shift due to the effect of discipline). The plots confirm this, suggesting that the effects seen in the aggregate analysis are accurate within disciplines as well. The only potential difference is in STEM WRIT courses; however, we believe that the observed distribution is biased from a very small sample size (6 courses) and does not actually represent a significant difference between STEM and non-STEM WRIT courses.
+
+```{r additional visualizations by discipline}
+# By enrollment
+course_data %>% ggplot(aes(x = log(enrollment), y = informality, color=discipline)) +
+  geom_point() +
+  stat_smooth() + 
+  theme_bw() + 
+  ggtitle("Log of enrollment vs. informality")
+
+course_data %>% ggplot(aes(x = log(enrollment), y = reading_ease, color=discipline)) +
+  geom_point() +
+  stat_smooth() +
+  theme_bw() + 
+  ggtitle("Log of enrollment vs. reading ease")
+
+# By WRIT
+course_data %>% ggplot(aes(x = informality, fill = WRIT)) +
+  geom_density(alpha = 0.5) +
+  geom_vline(data= ddply(course_data, "WRIT", summarise, grp.mean=mean(informality)),
+             aes(xintercept=grp.mean, color=WRIT),
+             linetype="dashed") +
+  theme_minimal() + 
+  ggtitle("Informality by WRIT status") +
+  facet_wrap(vars(discipline))
+
+course_data %>% ggplot(aes(x = reading_ease, fill = WRIT)) +
+  geom_density(alpha = 0.5) +
+  geom_vline(data= ddply(course_data, "WRIT", summarise, grp.mean=mean(reading_ease)),
+             aes(xintercept=grp.mean, color=WRIT),
+             linetype="dashed") +
+  theme_minimal() + 
+  ggtitle("Reading ease by WRIT status") +
+  facet_wrap(vars(discipline))
+
+# By level > 0
+course_data %>% ggplot(aes(x = informality, fill = upper_level_class)) +
+  geom_density(alpha = 0.5) + 
+  geom_vline(data = ddply(course_data, .(upper_level_class), summarise, grp.mean=mean(informality)),
+             aes(xintercept=grp.mean, color=upper_level_class),
+             linetype="dashed") +
+  theme_minimal() + 
+  ggtitle("Informality by upper level class status") +
+  facet_wrap(vars(discipline))
+
+course_data %>% ggplot(aes(x = reading_ease, fill = upper_level_class)) +
+  geom_density(alpha = 0.5) + 
+  geom_vline(data = ddply(course_data, .(upper_level_class), summarise, grp.mean=mean(reading_ease)),
+             aes(xintercept=grp.mean, color=upper_level_class),
+             linetype="dashed") +
+  theme_minimal() + 
+  ggtitle("Reading ease by upper level class status") +
+  facet_wrap(vars(discipline))
+
+# By level > 1
+course_data %>% ggplot(aes(x = informality, fill = grad_class)) +
+  geom_density(alpha = 0.5) + 
+  geom_vline(data = ddply(course_data, .(grad_class), summarise, grp.mean=mean(informality)),
+             aes(xintercept=grp.mean, color=grad_class),
+             linetype="dashed") +
+  theme_minimal() + 
+  ggtitle("Informality by grad class status") +
+  facet_wrap(vars(discipline))
+
+course_data %>% ggplot(aes(x = reading_ease, fill = grad_class)) +
+  geom_density(alpha = 0.5) + 
+  geom_vline(data = ddply(course_data, .(grad_class), summarise, grp.mean=mean(reading_ease)),
+             aes(xintercept=grp.mean, color=grad_class),
+             linetype="dashed") +
+  theme_minimal() + 
+  ggtitle("Reading ease by grad class status") +
+  facet_wrap(vars(discipline))
+
+# By level
+course_data$level <- factor(course_data$level)  # Make discipline a factor
+
+course_data %>% ggplot(aes(x = informality, fill = level)) +
+  geom_density(alpha = 0.5) + 
+  geom_vline(data = ddply(course_data, .(level), summarise, grp.mean=mean(informality)),
+             aes(xintercept=grp.mean, color=level),
+             linetype="dashed") +
+  theme_minimal() + 
+  ggtitle("Informality by class level") +
+  facet_wrap(vars(discipline))
+
+course_data %>% ggplot(aes(x = reading_ease, fill = level)) +
+  geom_density(alpha = 0.5) + 
+  geom_vline(data = ddply(course_data, .(level), summarise, grp.mean=mean(reading_ease)),
+             aes(xintercept=grp.mean, color=level),
+             linetype="dashed") +
+  theme_minimal() + 
+  ggtitle("Reading ease by class level") +
+  facet_wrap(vars(discipline))
+
+# Correlation between informality and reading ease
+course_data %>% ggplot(aes(x = reading_ease, y = informality, color=discipline)) +
+  geom_point() + 
+  stat_smooth() +
+  theme_minimal() + 
+  ggtitle("Reading ease vs. informality")
+```
+
+**I wonder if you’ll find the same effects across a variety of colleges and universities.**
+
+We considered comparing different colleges, but decided against it for time and difficulty of data collection reasons. We compiled the course descriptions from CAB manually, and so at least for this project, to explore courses at different schools, we would have to look into web scraping methods. It would certainly be an interesting follow-up study!
+
+
+**You could imagine that humanities and social sciences (as their names suggest) are primarily and fundamentally engaged with human experiences and creations. While they may indeed be more “readable”, does this actually make them less formal or complex? In addition, I was wondering if it has less to do with the content of these fields per se, but more the culture and style of academia.**
+
+We hypothesized that emphasis on the human experience and mediums like poetry and creative writing would contribute to the humanities and social sciences being less formal and more readable. The studies we referenced did not touch much on this, but there are fascinating studies about genre, discipline, and student writing that might be of interest. To answer the second question, part of the reason we chose the Flesch reading ease metric was because it just looks at the length of words (number of syllables) instead of how jargon-y a word is. In this way, we avoid any effect from the "content" of the fields, at least in their relative frequency. Had we looked at word frequency, for example, jargon might have inflated complexity scores in an undesirable way.
+
+**Do you know if it would be possible to filter out words related to the content/topic of the course from the metrics?**
+
+Ultimately, the question is how to best measure complexity or readability. We acknowledge that the metric we used is certainly flawed, but we felt it was a reasonable option due to its use in a couple of the studies we referenced. Removing discipline words would probably have been too large of a challenge for this project, and doing so would have rendered many course descriptions too short for our analysis.
+
+**I was wondering if you could explore things like informality~course type(discussion v. lecture) and readability~course difficulty rating.**
+
+We discussed how lecture vs. seminar classes would be different, but unfortunately CAB does not offer complete enough data on how each course is taught. However, we used enrollment, which we theorized would be closely related to course type. For course difficulty rating, we’re not sure how to access that information for each of the classes, but that would definitely be interesting to analyse!
+
+**Do you guys think controlling for the number of words in the description would have affected your results?**
+
+We did control for the number of words in the description when we calculated the informality and readability scores.
+
+**Since many factors have not been found to be significant, it might help to look at this trend over semesters.**
+
+We were not aiming to do a longitudinal study due to time constraints, and also because many course descriptions are probably not updated frequently. We also purposely chose Fall 2019 because we were not looking to investigate the effects of COVID, but it certainly could be interesting.
+
+**Why did you decide to (randomly) choose five departments for each discipline?**
+
+We decided to choose five departments per discipline (rather than using all departments per discipline) mostly for the sake of time. Since our data collection was manually performed, using every department would've significantly increased the time spent on it. Also, there's an uneven number of departments per discipline, so we likely would've needed to cut some anyway. Indeed, though, it is possible that the sampling introduced some bias; ideally, we would use all of the departments in a discipline. In our analysis, each discipline ended up having roughly a similar number of classes.
+
+**Did you guys consider adding a random effect by teacher?**
+
+We did not consider instructors for a few reasons. First, the information listed regarding instructors is not always accurate. This is true for some language classes. For example, Also, courses that are co-taught or have multiple sections, would have made this very complicated.
+
+**I’m interested in the relationship between readability and informality, and whether they correlate at all.**
+
+Following this suggestion, we looked into the correlation between reading ease and informality, and found that in general, reading ease and informality are positively correlated, as can be seen in the graph below. This is consistent across discipline as well. Since a lot of course descriptions have 0 informality markers, they have an informality score of 0, which is what the concentration of points at informality = 0 is. 
+
+```{r correlation}
+# Correlation between informality and reading ease
+course_data %>% ggplot(aes(x = reading_ease, y = informality)) +
+  geom_point() + 
+  stat_smooth() +
+  theme_minimal() + 
+  ggtitle("Reading ease vs. informality")
+```
+
+**I wonder what the results would be if the CAB course descriptions were measured in terms of their language complexity (using measures such as MLU, # of unique words, etc.).**
+
+For our study, we used reading ease as a measure of language complexity of the course descriptions. We did think that reading ease and informality could be related, and so we looked at their correlation, which we talk about in the response above this one. 
+
+**Is there a correlation between informality and readability ease? And does readability ease account for unfamiliar words, or just the length of words and sentences?**
+
+We talk about the correlation between reading ease and informality two responses above this one. The reading ease score only looks at the length of words and sentences. We didn’t want to look at the number of unfamiliar words because these course descriptions contain many words that are relatively rare by non-academia standards, which could’ve biased the scores.
+
+**When I look at the density plots of the WRIT, though, I wonder why the result here is not significant? Do we ignore the difference in the colored areas between the WRIT and non-WRIT courses?**
+
+We were also surprised by this result, but that is how the model panned out. There may be some effect from the sample sizes of WRIT vs. non-WRIT courses.
+
+
+### References
+Hyland, K. & Jiang, F. Is academic writing becoming more informal? English for Specific Purposes 45, 40-51 (2016). doi:10.1016/j.esp.2016.09.001.
+
+Durrant, P. Lexical bundles and disciplinary variation in university students' writing: Mapping the territories. Applied Linguistics 38, 165-193 (2015). doi:10.1093/applin/amv011.
+
+Courses Factbook. Brown University Office of Institutional Research (2020).
+
+Courses that Develop Writing Skills in The Brown Degree. The College of Brown University.
+
+Freedman, J. & Jurafsky, D. Authenticity in America: Class distinctions in potato chip advertising. Gastronomica, 11. 46-54 (2011).
+
+Hartley, J., Sotto, E. & Fox, C. Clarity across the disciplines: An analysis of texts in the sciences, social sciences, and arts and humanities. Science Communication, 26. 188-210 (2004).
+
+Chang, Y. & Swales, M. Informal elements in English academic writing: Threats or opportunities for advanced non-native speakers? in Writing: Texts, processes and practices (eds. Candlin, C. & Hyland, K.) 145–167 (Sage Publications, 1999).
