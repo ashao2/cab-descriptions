@@ -1,5 +1,5 @@
 ---
-title: "Final Project"
+title: "Final Project - Allison Shao, Ethan Pan, Niharika Jhingan"
 output: html_document
 ---
 
@@ -115,7 +115,7 @@ reading_ease_mdl_ss <- lmer(scale(reading_ease) ~ discipline + scale(log(enrollm
                         data = course_data)
 ```
 
-Discipline was one of our fixed effects, as we wanted to investigate how discipline affects informality and reading ease scores. We ran separate models with humanities and social sciences as the reference level, to get a complete understanding of the relationship between the three disciplines. We also included enrollment number, WRIT-designation, upper level class status, and grad class status as fixed effects in our model. Though we wee not actively looking to investigate these factors, we suspected that they could explain variance in the data.
+Discipline was one of our fixed effects, as we wanted to investigate how discipline affects informality and reading ease scores. We ran separate models with humanities and social sciences as the reference level, to get a complete understanding of the relationship between the three disciplines. We also included enrollment number, WRIT-designation, upper level class status, and grad class status as fixed effects in our model. Though we were not actively looking to investigate these factors, we suspected that they could explain variance in the data.
 
 WRIT courses include all English, Literary Arts, and Comparative Literature courses, as well as courses in other departments that are specially designated as WRIT courses. According to The Brown Degree, WRIT courses are intended to teach students “how to think and communicate in writing either by learning the conventions of academic writing at the college level or by learning the conventions and expectations for writing in a particular discipline.” This goal directly relates to our research question. Since WRIT courses have an especially strong emphasis on discipline writing, perhaps their courses descriptions will reflect this. 
 
